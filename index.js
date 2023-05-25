@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient } = require('mongodb');
 const bodyParser = require('body-parser');
-const Product = require('./models/product');
+const Product = require('./models/Product');
 const Barcode = require('./models/Barcode');
 
 const app = express();
