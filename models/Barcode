@@ -1,0 +1,10 @@
+const mongoose = require('mongoose');
+
+const barcodeSchema = new mongoose.Schema({
+  code: { type: String, required: true, unique: true },
+  product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+});
+
+const Barcode = mongoose.model('Barcode', barcodeSchema);
+
+module.exports = Barcode;
