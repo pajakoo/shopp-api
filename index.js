@@ -1,8 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ObjectId } = require('mongodb');
+const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const Product = require('./models/product');
+const Product = require('./models/Product');
 const Barcode = require('./models/Barcode');
 
 const app = express();
