@@ -6,7 +6,7 @@ const Product = require('./models/Product');
 const Barcode = require('./models/Barcode');
 
 const app = express();
-const port = 3000;
+const port = 3333;
 
 app.use(express.json());
 app.use(cors()); // Add CORS middleware
