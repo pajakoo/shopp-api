@@ -1,22 +1,20 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ObjectId } = require('mongodb');
-const mongoose = require('mongoose');
+const { MongoClient } = require('mongodb');
 const bodyParser = require('body-parser');
 const Product = require('./models/Product');
 const Barcode = require('./models/Barcode');
 
 const app = express();
-const port = 3333;
+const port = 3000;
 
 app.use(express.json());
 app.use(cors()); // Add CORS middleware
 
-const uri = "mongodb+srv://georgievkn82:S2UNdFGTzPCVz9TE@cluster0.udwqatw.mongodb.net/ShoppingApp?retryWrites=true&w=majority"; //'mongodb://localhost:27017';
-const dbName = 'ShoppingApp';
+const uri = "mongodb+srv://georgievkn82:S2UNdFGTzPCVz9TE@cluster0.udwqatw.mongodb.net/ShoppingApp?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
-client.connect((err) => {
+client.connect(err => {
   if (err) {
     console.error('Error connecting to the database:', err);
   } else {
@@ -24,10 +22,9 @@ client.connect((err) => {
   }
 });
 
-const db = client.db(dbName);
-
 app.get('/api/products', async (req, res) => {
   try {
+    const db = client.db('ShoppingApp');
     const products = await db.collection('products').find().toArray();
     res.json(products);
   } catch (err) {
@@ -40,8 +37,10 @@ app.delete('/api/products/:id', async (req, res) => {
   const productId = req.params.id;
 
   try {
-    await db.collection('products').deleteOne({ _id: new ObjectId(productId) });
-    await db.collection('barcodes').deleteMany({ product: new ObjectId(productId) });
+    const db = client.db('ShoppingApp');
+
+    await db.collection('products').deleteOne({ _id: ObjectId(productId) });
+    await db.collection('barcodes').deleteMany({ product: ObjectId(productId) });
 
     res.json({ message: 'Продуктът е изтрит успешно' });
   } catch (error) {
@@ -50,9 +49,9 @@ app.delete('/api/products/:id', async (req, res) => {
   }
 });
 
-
 app.get('/api/products/:barcode', async (req, res) => {
   try {
+    const db = client.db('ShoppingApp');
     const product = await db.collection('products').findOne({ barcode: req.params.barcode });
 
     if (!product) {
@@ -70,6 +69,7 @@ app.post('/api/products', async (req, res) => {
   const { barcode, name, price, store, location } = req.body;
 
   try {
+    const db = client.db('ShoppingApp');
     const existingProduct = await db.collection('products').findOne({ barcode, store });
 
     if (existingProduct) {
