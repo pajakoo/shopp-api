@@ -41,8 +41,8 @@ app.delete('/api/products/:id', async (req, res) => {
   try {
     const db = client.db('ShoppingApp');
 
-    await db.collection('products').deleteOne({ _id: ObjectId(productId) });
-    await db.collection('barcodes').deleteMany({ product: ObjectId(productId) });
+    await db.collection('products').deleteOne({ _id: new ObjectId(productId) });
+    await db.collection('barcodes').deleteMany({ product: new ObjectId(productId) });
 
     res.json({ message: 'Продуктът е изтрит успешно' });
   } catch (error) {
