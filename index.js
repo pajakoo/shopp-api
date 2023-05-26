@@ -11,7 +11,7 @@ const port = 3333;
 app.use(express.json());
 app.use(cors()); // Add CORS middleware
 
-const uri = 'mongodb://localhost:27017';
+const uri = "mongodb+srv://georgievkn82:S2UNdFGTzPCVz9TE@cluster0.udwqatw.mongodb.net/ShoppingApp?retryWrites=true&w=majority"; //'mongodb://localhost:27017';
 const dbName = 'ShoppingApp';
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
