@@ -1,6 +1,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const express = require('express');
+const axios = require('axios');
 const cors = require('cors');
 const { MongoClient, ObjectId } = require('mongodb');
 const bodyParser = require('body-parser');
@@ -166,39 +167,39 @@ app.post('/api/cheapest', async (req, res) => {
           from: 'products',
           localField: '_id',
           foreignField: 'store',
-          as: 'products'
-        }
+          as: 'products',
+        },
       },
       {
         $match: {
           'products.name': {
-            $in: productList.map((product) => product.name)
-          }
-        }
+            $in: productList.map((product) => product.name),
+          },
+        },
       },
       {
         $addFields: {
           products: {
             $filter: {
               input: '$products',
-              cond: { $in: ['$$this.name', productList.map((product) => product.name)] }
-            }
-          }
-        }
+              cond: { $in: ['$$this.name', productList.map((product) => product.name)] },
+            },
+          },
+        },
       },
       {
         $match: {
-          $expr: { $eq: [{ $size: '$products' }, productList.length] }
-        }
-      }
+          $expr: { $eq: [{ $size: '$products' }, productList.length] },
+        },
+      },
     ]).toArray();
 
     // Find the prices for the products in the list and sort by date in descending order
     const prices = await pricesCollection
       .find({
         product: {
-          $in: productList.map((product) => product.id)
-        }
+          $in: productList.map((product) => product.id),
+        },
       })
       .sort({ date: -1 })
       .toArray();
@@ -220,13 +221,15 @@ app.post('/api/cheapest', async (req, res) => {
       const totalPrice = productList.reduce((acc, product) => {
         const storeProduct = storeProducts.find((p) => p.name === product.name);
         const productPrice = productPrices.find((p) => p.product.toString() === product.id.toString());
-        const priceValue = productPrice ? productPrice.price : (storeProduct ? storeProduct.price : 0);
+        const priceValue = productPrice ? productPrice.price : storeProduct ? storeProduct.price : 0;
         return acc + Number(priceValue);
       }, 0);
 
       return {
         store: store.name,
-        totalPrice
+        latitude: store.location.lat,
+        longitude: store.location.lng,
+        totalPrice,
       };
     });
 
@@ -243,6 +246,17 @@ app.post('/api/cheapest', async (req, res) => {
 
 
 
+app.get('/api/searchProduct', async (req, res) => {
+  const { code } = req.query;
+  try {
+    // Make the request to the external API
+    const response = await axios.get(`https://barcode.bazadanni.com/json/${code}`);
+    res.json(response.data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 
 
