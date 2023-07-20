@@ -84,6 +84,19 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
+app.get('/api/stores', async (req, res) => {
+  try {
+    const collection = db.collection('stores');
+    const stores = await collection.find({}, { name: 1 }).toArray();
+    res.json(stores);
+  } catch (error) {
+    console.error('Грешка при извличане на магазините:', error);
+    res.status(500).json({ error: 'Възникна грешка при извличане на магазините' });
+  }
+});
+
+
+
 app.get('/api/products-client', async (req, res) => {
   try {
     const collection = db.collection('products');
@@ -149,9 +162,6 @@ app.get('/api/products-client', async (req, res) => {
     res.status(500).json({ error: 'Възникна грешка' });
   }
 });
-
-
-
 
 app.post('/api/cheapest', async (req, res) => {
   const productList = req.body;
@@ -243,9 +253,6 @@ app.post('/api/cheapest', async (req, res) => {
   }
 });
 
-
-
-
 app.get('/api/searchProduct', async (req, res) => {
   const { code } = req.query;
   try {
@@ -259,8 +266,26 @@ app.get('/api/searchProduct', async (req, res) => {
 });
 
 
+app.get('/api/product/:barcode/history', async (req, res) => {
+  const { barcode } = req.params;
 
+  try {
+    const products = await db.collection('products').find({ barcode }).toArray();
 
+    if (products.length === 0) {
+      return res.status(404).json({ message: 'Продуктите не са намерени' });
+    }
+
+    const productIds = products.map((product) => product._id);
+
+    const prices = await db.collection('prices').find({ product: { $in: productIds } }).toArray();
+
+    res.json(prices);
+  } catch (error) {
+    console.error('Грешка при намиране на ценовата история:', error);
+    res.status(500).json({ message: 'Възникна грешка при намиране на ценовата история' });
+  }
+});
 
 
 app.delete('/api/products/:id', async (req, res) => {
@@ -269,15 +294,19 @@ app.delete('/api/products/:id', async (req, res) => {
   try {
     const db = client.db('ShoppingApp');
 
+    // Delete the product
     await db.collection('products').deleteOne({ _id: new ObjectId(productId) });
-    await db.collection('barcodes').deleteMany({ product: new ObjectId(productId) });
 
-    res.json({ message: 'Продуктът е изтрит успешно' });
+    // Delete the associated price
+    await db.collection('prices').deleteOne({ product: new ObjectId(productId) });
+
+    res.json({ message: 'Продуктът и свързаната цена са изтрити успешно' });
   } catch (error) {
-    console.error('Грешка при изтриване на продукта:', error);
-    res.status(500).json({ message: 'Възникна грешка при изтриване на продукта' });
+    console.error('Грешка при изтриване на продукта и цената:', error);
+    res.status(500).json({ message: 'Възникна грешка при изтриване на продукта и цената' });
   }
 });
+
 
 
 app.get('/api/products/:barcode', async (req, res) => {
