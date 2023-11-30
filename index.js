@@ -1,5 +1,5 @@
-const https = require('https');
-const fs = require('fs');
+// const https = require('https');
+// const fs = require('fs');
 const express = require('express');
 //cmd+K+cmd+0 folding functions ( unfold  cmd+K +cmd+J )
 
@@ -17,10 +17,10 @@ const Role = require('./models/Role');
 
 const app = express();
 const port = 3333;
-const options = {
-  key:fs.readFileSync('key.pem'),
-  cert:fs.readFileSync('cert.pem')
-}
+// const options = {
+//   key:fs.readFileSync('key.pem'),
+//   cert:fs.readFileSync('cert.pem')
+// }
 
 app.use(express.json());
 app.use(cors());
