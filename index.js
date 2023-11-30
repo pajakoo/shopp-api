@@ -1,35 +1,160 @@
+const https = require('https');
+const fs = require('fs');
+const express = require('express');
+//cmd+K+cmd+0 folding functions ( unfold  cmd+K +cmd+J )
+
 require('dotenv').config();
 const mongoose = require('mongoose');
-const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-const { MongoClient, ObjectId } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const bodyParser = require('body-parser');
 const Product = require('./models/Product');
 const Price = require('./models/Price');
 const Store = require('./models/Store');
+const User = require('./models/User');  
+const Role = require('./models/Role');
 
 const app = express();
 const port = 3333;
+const options = {
+  key:fs.readFileSync('key.pem'),
+  cert:fs.readFileSync('cert.pem')
+}
 
 app.use(express.json());
 app.use(cors());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_CONNECTION}@cluster0.udwqatw.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
-//const uri = "mongodb://localhost:27017/"
-const client = new MongoClient(uri);
+// const uri = "mongodb://localhost:27017/"
 
-client.connect((err) => {
-  if (err) {
-    console.error('Error connecting to the database:', err);
-  } else {
-    console.log('Connected to the database');
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
   }
 });
+
+async function run() {
+  try {
+    // Connect the client to the server	(optional starting in v4.7)
+    await client.connect();
+    // Send a ping to confirm a successful connection
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } finally {
+    // Ensures that the client will close when you finish/error
+    await client.close();
+  }
+}
+run().catch(console.dir);
+
+
+
+
 const dbName = process.env.DB_NAME;
 const db = client.db(dbName);
 
+app.put('/api/users/:userId/roles', async (req, res) => {
+  const { userId } = req.params;
+  const { roles } = req.body;
+  await client.connect();
+  try {
+    // Update user roles using updateOne
+    const result = await db.collection('users').updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: { roles } }
+    );
+
+    if (result.modifiedCount > 0) {
+      // Find the updated user and return it
+      const updatedUser = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+      res.json(updatedUser);
+    } else {
+      res.status(404).json({ error: 'User not found or roles not modified' });
+    }
+  } catch (error) {
+    console.error('Error updating user roles:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+app.get('/api/users', async (req, res) => {
+  await client.connect();
+  try {
+    // Fetch all users from the 'users' collection in MongoDB
+    const users = await db.collection('users').find().toArray();
+    res.json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/api/userRoles', async (req, res) => {
+  await client.connect();
+  try {
+    const rolesCollection = db.collection('role');
+    
+    const roles = await rolesCollection.find().toArray();
+    res.json(roles);
+  } catch (error) {
+    console.error('Error fetching roles:', error);
+    res.status(500).json({ error: 'Error fetching roles' });
+  } finally {
+    await client.close();
+  }
+});
+
+app.post('/api/userInfo', async (req, res) => {
+  const { user } = req.body;
+  await client.connect();
+  try {
+    // Check if the user already exists in the database
+    const existingUserCursor = await db.collection('users').find({ sub: user.sub });
+    const existingUser = await existingUserCursor.next();
+
+    if (!existingUser) {
+      // If the user doesn't exist, create a new user
+      const newUser = {
+        sub: user.sub,
+        name: user.name,
+        email: user.email,
+        roles: [new ObjectId('65660583e8d841f79b8fe615')]
+      };
+
+      // Insert the new user into the database
+      await db.collection('users').insertOne(newUser);
+
+      // Respond with user information
+      res.json({
+        sub: newUser.sub,
+        name: user.name,
+        email: newUser.email,
+        roles: newUser.roles,
+        // Add other fields as needed
+      });
+    } else {
+      // If the user exists, respond with existing user information
+      res.json({
+        sub: existingUser.sub,
+        name: user.name,
+        email: existingUser.email,
+        roles: existingUser.roles,
+        // Add other fields as needed
+      });
+    }
+  } catch (error) {
+    console.error('Грешка при обработка на потребителската информация:', error.message);
+    res.status(500).json({ error: 'Грешка при обработка на потребителската информация.' });
+  }
+});
+
 app.get('/api/products', async (req, res) => {
+  await client.connect();
   try {
     const collection = db.collection('products');
     const products = await collection.aggregate([
@@ -85,6 +210,7 @@ app.get('/api/products', async (req, res) => {
 });
 
 app.get('/api/stores', async (req, res) => {
+  await client.connect();
   try {
     const collection = db.collection('stores');
     const stores = await collection.find({}, { name: 1 }).toArray();
@@ -95,9 +221,8 @@ app.get('/api/stores', async (req, res) => {
   }
 });
 
-
-
 app.get('/api/products-client', async (req, res) => {
+  await client.connect();
   try {
     const collection = db.collection('products');
     const products = await collection.aggregate([
@@ -146,6 +271,7 @@ app.get('/api/products-client', async (req, res) => {
           barcode: 1,
           name: 1,
           location: 1,
+          storeId: '$storeData._id',
           store: '$storeData.name',
           price: {
             $ifNull: ['$priceData.price', '$price']
@@ -165,7 +291,7 @@ app.get('/api/products-client', async (req, res) => {
 
 app.post('/api/cheapest', async (req, res) => {
   const productList = req.body;
-
+  await client.connect();
   try {
     const storesCollection = db.collection('stores');
     const pricesCollection = db.collection('prices');
@@ -236,6 +362,7 @@ app.post('/api/cheapest', async (req, res) => {
       }, 0);
 
       return {
+        storeId:store._id,
         store: store.name,
         latitude: store.location.lat,
         longitude: store.location.lng,
@@ -255,6 +382,7 @@ app.post('/api/cheapest', async (req, res) => {
 
 app.get('/api/searchProduct', async (req, res) => {
   const { code } = req.query;
+  await client.connect();
   try {
     // Make the request to the external API
     const response = await axios.get(`https://barcode.bazadanni.com/json/${code}`);
@@ -265,10 +393,28 @@ app.get('/api/searchProduct', async (req, res) => {
   }
 });
 
+app.get('/api/product/:barcode/prices/:storeId', async (req, res) => {
+  const { barcode, storeId } = req.params;
+  await client.connect();
+  try {
+    const product = await db.collection('products').findOne({ barcode, store: new ObjectId(storeId) });
+
+    if (!product) {
+      return res.status(404).json({ message: 'Продуктът не е намерен' });
+    }
+
+    const prices = await db.collection('prices').find({ product: product._id }).toArray();
+
+    res.json(prices);
+  } catch (error) {
+    console.error('Грешка при извличане на цените за продукта:', error);
+    res.status(500).json({ message: 'Възникна грешка при извличане на цените за продукта' });
+  }
+});
 
 app.get('/api/product/:barcode/history', async (req, res) => {
   const { barcode } = req.params;
-
+  await client.connect();
   try {
     const products = await db.collection('products').find({ barcode }).toArray();
 
@@ -287,10 +433,9 @@ app.get('/api/product/:barcode/history', async (req, res) => {
   }
 });
 
-
 app.delete('/api/products/:id', async (req, res) => {
   const productId = req.params.id;
-
+  await client.connect();
   try {
     const db = client.db('ShoppingApp');
 
@@ -307,9 +452,8 @@ app.delete('/api/products/:id', async (req, res) => {
   }
 });
 
-
-
 app.get('/api/products/:barcode', async (req, res) => {
+  await client.connect();
   try {
     const product = await db.collection('products').findOne({ barcode: req.params.barcode });
 
@@ -325,7 +469,7 @@ app.get('/api/products/:barcode', async (req, res) => {
 });
 app.post('/api/products', async (req, res) => {
   const { barcode, name, price, store, location } = req.body;
-
+  await client.connect();
   try {
     const collection = db.collection('products');
 
@@ -401,11 +545,15 @@ app.post('/api/products', async (req, res) => {
 });
 
 
-
+// const server = https.createServer(options, app);
+// server.listen(port, () => {
+//   console.log(`Server running on port ${port}`);
+// });
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
 
 
 //brew services stop mongodb-community@5.0
