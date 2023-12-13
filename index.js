@@ -5,14 +5,14 @@
 // brew services start mongodb-community@5.0
 // brew services stop mongodb-community@5.0
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const passportSetup = require("./passport");
+// const passportSetup = require("./passport");
 const bodyParser = require('body-parser');
 const Product = require('./models/Product');
 const Price = require('./models/Price');
 const Store = require('./models/Store');
 const User = require('./models/User');
 const Role = require('./models/Role');
-const authRout = require('./routes/auth')
+// const authRout = require('./routes/auth')
 
 const CLIENT_URL = "deluxe-tapioca-7f56a1.netlify.app";//"http://localhost:3000/";
 const cookieSession = require('cookie-session');
