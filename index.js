@@ -1,19 +1,32 @@
 // const https = require('https');
 // const fs = require('fs');
-const express = require('express');
 //cmd+K+cmd+0 folding functions ( unfold  cmd+K +cmd+J )
+// const { createProxyMiddleware } = require('http-proxy-middleware');
+// brew services start mongodb-community@5.0
+// brew services stop mongodb-community@5.0
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const passportSetup = require("./passport");
+const bodyParser = require('body-parser');
+const Product = require('./models/Product');
+const Price = require('./models/Price');
+const Store = require('./models/Store');
+const User = require('./models/User');
+const Role = require('./models/Role');
+const authRout = require('./routes/auth')
+
+const CLIENT_URL = "deluxe-tapioca-7f56a1.netlify.app";//"http://localhost:3000/";
+const cookieSession = require('cookie-session');
+const session = require('express-session');
+const express = require('express');
+const passport = require('passport');
+
 
 require('dotenv').config();
 const mongoose = require('mongoose');
 const axios = require('axios');
 const cors = require('cors');
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const bodyParser = require('body-parser');
-const Product = require('./models/Product');
-const Price = require('./models/Price');
-const Store = require('./models/Store');
-const User = require('./models/User');  
-const Role = require('./models/Role');
 
 const app = express();
 const port = 3333;
@@ -23,10 +36,105 @@ const port = 3333;
 // }
 
 app.use(express.json());
-app.use(cors());
+
+// app.use(cookieSession({
+//   name:"seesion",
+//   keys:["lama"],
+//   maxAge: 24*60*60*100
+// }));
+
+app.use(
+  session({
+    secret: "secretcode",
+    resave: true,
+    saveUninitialized: true,
+    cookie: {
+      sameSite: "none",
+      secure: true,
+      maxAge: 1000 * 60 * 60 * 24 * 7 // One Week
+    }
+  }))
+
+
+
+app.use(cors({
+  origin: CLIENT_URL,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true
+}));
+
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((obj, done) => done(null, obj));
+
+
+
+
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: "698649535640-7j0jm7jlscolg3gfdr7dkn0qs248jeep.apps.googleusercontent.com",
+      clientSecret: "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",
+      callbackURL: "/auth/google/callback",
+    },
+    function (accessToken, refreshToken, profile, done) {
+      //console.log(accessToken, refreshToken, profile, done);
+      done(null, profile);
+    }
+  )
+);
+
+
+
+app.get("/auth/google", passport.authenticate("google", { scope: ["profile"] }) );
+app.get("/auth/google/callback", passport.authenticate("google", {successRedirect: CLIENT_URL, failureRedirect: "/login/failed", }) );
+
+
+
+
+
+  app.get("/auth/login/success", (req, res) => {
+    res.status(200).json({
+      success: true,
+      message: "successfull"
+    });
+});
+
+app.get("/auth/login/failed", (req, res) => {
+  res.status(401).json({
+    success: false,
+    message: "failure",
+  });
+});
+
+
+  app.get("/auth/logout", (req, res) => {
+    
+      req.logout();
+      res.send("done");
+  })
+
+  
+
+// app.use("/auth", authRout );
+
+
+// app.use('/', createProxyMiddleware({ target: 'http://localhost:3000', changeOrigin: false }));
+ 
+
+
+
+
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_CONNECTION}@cluster0.udwqatw.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 // const uri = "mongodb://localhost:27017/"
+
+
+
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -50,8 +158,6 @@ async function run() {
   }
 }
 run().catch(console.dir);
-
-
 
 
 const dbName = process.env.DB_NAME;
@@ -98,7 +204,7 @@ app.get('/api/userRoles', async (req, res) => {
   await client.connect();
   try {
     const rolesCollection = db.collection('role');
-    
+
     const roles = await rolesCollection.find().toArray();
     res.json(roles);
   } catch (error) {
@@ -114,7 +220,7 @@ app.post('/api/userInfo', async (req, res) => {
   await client.connect();
   try {
     // Check if the user already exists in the database
-    const existingUserCursor = await db.collection('users').find({ sub: user.sub });
+    const existingUserCursor = await db.collection('users').find({ googleId: user.googleId });
     const existingUser = await existingUserCursor.next();
 
     if (!existingUser) {
@@ -362,7 +468,7 @@ app.post('/api/cheapest', async (req, res) => {
       }, 0);
 
       return {
-        storeId:store._id,
+        storeId: store._id,
         store: store.name,
         latitude: store.location.lat,
         longitude: store.location.lng,
@@ -556,4 +662,51 @@ app.listen(port, () => {
 
 
 
-//brew services stop mongodb-community@5.0
+
+
+
+
+
+
+
+
+
+
+
+
+// app.use(require('express-session')({ secret: process.env.GOOGLE_CLIENT_SECRET, resave: true, saveUninitialized: true }));
+// app.use(passport.initialize());
+// app.use(passport.session());
+
+//app.get('/auth/google', passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/plus.login'] }));
+
+// app.get(
+//   '/auth/google/callback',
+//   passport.authenticate('google', { failureRedirect: '/' }),
+//   async (req, res) => {
+//     await client.connect();
+//     try {
+//       // Check if the user already exists in the database
+//       const existingUserCursor = await db.collection('users').find({ googleId: req.user.id });
+//       const existingUser = await existingUserCursor.next();
+
+//       if (!existingUser) {
+//         // If the user doesn't exist, create a new user
+//         const newUser = {
+//           googleId: req.user.id,
+//           name: req.user.displayName,
+//           email: '',
+//           roles: [new ObjectId('65660583e8d841f79b8fe615')]
+//         };
+
+//         // Insert the new user into the database
+//         await db.collection('users').insertOne(newUser);
+//       }
+//     } catch { }
+//     await client.close();
+//     // Successful authentication, redirect to the client app\
+//     res.redirect('http://localhost:3000'); // Adjust as needed
+//   }
+// );
+
+
