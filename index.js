@@ -14,7 +14,7 @@ const User = require('./models/User');
 const Role = require('./models/Role');
 // const authRout = require('./routes/auth')
 
-const CLIENT_URL = "deluxe-tapioca-7f56a1.netlify.app";//"http://localhost:3000/";
+const CLIENT_URL = "https://deluxe-tapioca-7f56a1.netlify.app/";//"http://localhost:3000/";
 const cookieSession = require('cookie-session');
 const session = require('express-session');
 const express = require('express');
@@ -42,6 +42,8 @@ app.use(express.json());
 //   keys:["lama"],
 //   maxAge: 24*60*60*100
 // }));
+
+app.set("trust proxy", 1);
 
 app.use(
   session({
