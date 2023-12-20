@@ -2,6 +2,7 @@ const router = require("express").Router();
 const passport = require("passport");
 
 router.get("/login/success", (req, res) => {
+	console.log('pajak success:->', req.user);
 	if (req.user) {
 		res.status(200).json({
 			error: false,
