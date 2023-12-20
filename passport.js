@@ -10,15 +10,18 @@ passport.use(
 			scope: ["profile", "email"],
 		},
 		function (accessToken, refreshToken, profile, callback) {
+			console.log(' profile->', profile);
 			callback(null, profile);
 		}
 	)
 );
 
 passport.serializeUser((user, done) => {
+	console.log('1 passport->', user);
 	done(null, user);
 });
 
 passport.deserializeUser((user, done) => {
+	console.log('2 passport->', user);
 	done(null, user);
 });
