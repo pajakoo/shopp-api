@@ -1,3 +1,4 @@
+//https://answers.netlify.com/t/cookies-not-getting-sent-in-request-after-deployment/84255/5
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -62,6 +63,7 @@ app.use(
 	})
 );
 
+console.log('CORS:', process.env.CLIENT_URL);
 app.use("/auth", authRoute);
 
 app.put('/api/users/:userId/roles', async (req, res) => {
@@ -297,6 +299,7 @@ app.get('/api/products-client', async (req, res) => {
 
 app.post('/api/cheapest', async (req, res) => {
 	const productList = req.body;
+	console.log('productList',req);
 	await client.connect();
 	try {
 		const storesCollection = db.collection('stores');
