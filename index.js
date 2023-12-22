@@ -1,4 +1,3 @@
-//https://answers.netlify.com/t/cookies-not-getting-sent-in-request-after-deployment/84255/5
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -7,7 +6,7 @@ const authRoute = require("./routes/auth");
 const cookieSession = require("cookie-session");
 const passportStrategy = require("./passport");
 const app = express();
-
+app.use(express.json());
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_CONNECTION}@cluster0.udwqatw.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 // const uri = "mongodb://localhost:27017/"
@@ -63,7 +62,6 @@ app.use(
 	})
 );
 
-console.log('CORS:', process.env.CLIENT_URL);
 app.use("/auth", authRoute);
 
 app.put('/api/users/:userId/roles', async (req, res) => {
@@ -299,7 +297,6 @@ app.get('/api/products-client', async (req, res) => {
 
 app.post('/api/cheapest', async (req, res) => {
 	const productList = req.body;
-	console.log('productList',req);
 	await client.connect();
 	try {
 		const storesCollection = db.collection('stores');
