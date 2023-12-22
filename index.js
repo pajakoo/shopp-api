@@ -59,6 +59,7 @@ app.use(
 		origin: process.env.CLIENT_URL,
 		methods: "GET,POST,PUT,DELETE",
 		credentials: true,
+		domain: 'https://deluxe-tapioca-7f56a1.netlify.app/'
 	})
 );
 
