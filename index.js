@@ -12,12 +12,15 @@ app.use(express.json());
 app.use(passport.initialize());
 
 app.use(
-	cookieSession({
-		name: "session",
-		keys: ["cyberwolve"],
-		maxAge: 24 * 60 * 60 * 100,
-	})
+  cookieSession({
+    name: 'session',
+    keys: ['cyberwolve'],
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
+    domain: 'https://pajakoo-api.onrender.com', // Set the domain of your website
+    secure: true, // Require HTTPS
+  })
 );
+
 
 app.use(passport.initialize());
 app.use(passport.session());
