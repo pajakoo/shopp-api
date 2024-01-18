@@ -56,13 +56,13 @@ passport.deserializeUser((token, done) => {
 });
 
 // Google OAuth route
-app.get('https://pajakoo-api.onrender.com/auth/google',
+app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
 // Example in your Express backend
 app.get(
-  'https://pajakoo-api.onrender.com/auth/google/callback',
+  '/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
   (req, res) => {
     console.log('pajak',req.user.id);
