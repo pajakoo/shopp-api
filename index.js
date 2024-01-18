@@ -72,7 +72,7 @@ app.get(
   passport.authenticate('google', { failureRedirect: '/' }),
   (req, res) => {
     // Set any necessary cookies, including the first-party cookie
-    res.cookie('firstPartyCookie', 'exampleValue', { domain: process.env.CLIENT_URL, secure: true, sameSite: 'None' });
+    res.cookie('firstPartyCookie', 'exampleValue', { domain:"https://pajakoo-api.onrender.com", secure: true, sameSite: 'None' });
     res.redirect(process.env.CLIENT_URL);
   }
 );
