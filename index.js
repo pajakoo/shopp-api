@@ -71,8 +71,12 @@ app.get(
   '/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
   (req, res) => {
+    console.log('pajak',req.user);
+    const userData = { id: req.user.id};
+    const encodedUserData = encodeURIComponent(JSON.stringify(userData));
+
     // Set any necessary cookies, including the first-party cookie
-    res.cookie('firstPartyCookie', req.user, { domain: process.env.CLIENT_URL, secure: true, sameSite: 'None' });
+    res.cookie('firstPartyCookie', encodedUserData, { domain: process.env.CLIENT_URL, secure: true, sameSite: 'None' });
     res.redirect(process.env.CLIENT_URL);
   }
 );
