@@ -22,6 +22,12 @@ app.use(
 );
 
 
+app.get('/set-cookie', (req, res) => {
+  res.cookie('firstPartyCookie', 'exampleValue', { domain: 'yourdomain.com', secure: true });
+  res.send('Cookie set as first-party.');
+});
+
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -60,13 +66,17 @@ app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
-// Google OAuth callback
-app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' , successRedirect: process.env.CLIENT_URL}),
+// Example in your Express backend
+app.get(
+  '/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/' }),
   (req, res) => {
-    res.redirect('/profile'); // Redirect to profile route
+    // Set any necessary cookies, including the first-party cookie
+    res.cookie('firstPartyCookie', 'exampleValue', { domain: process.env.CLIENT_URL, secure: true, sameSite: 'None' });
+    res.redirect(process.env.CLIENT_URL);
   }
 );
+
 
 // Profile route to demonstrate authentication
 app.get('/profile', (req, res) => {
