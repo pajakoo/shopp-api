@@ -37,7 +37,7 @@ app.use(
 passport.use(new GoogleStrategy({
   clientID:  process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: '/auth/google/callback',
+  callbackURL: 'https://pajakoo-api.onrender.com/auth/google/callback',
 }, (accessToken, refreshToken, profile, done) => {
   return done(null, profile);
 }));
@@ -56,13 +56,13 @@ passport.deserializeUser((token, done) => {
 });
 
 // Google OAuth route
-app.get('/auth/google',
+app.get('https://pajakoo-api.onrender.com/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
 // Example in your Express backend
 app.get(
-  '/auth/google/callback',
+  'https://pajakoo-api.onrender.com/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
   (req, res) => {
     console.log('pajak',req.user.id);
