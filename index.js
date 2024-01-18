@@ -70,7 +70,7 @@ app.get(
     const encodedUserData = encodeURIComponent(JSON.stringify(userData));
 
     // Set any necessary cookies, including the first-party cookie
-    res.cookie('firstPartyCookie', 'кур' , { domain: process.env.CLIENT_URL, secure: true, sameSite: 'None' });
+    res.cookie('firstPartyCookie', encodedUserData , { domain: process.env.BACKEND_URL, secure: true, sameSite: 'None' });
     res.redirect(process.env.CLIENT_URL);
   }
 );
@@ -78,7 +78,6 @@ app.get(
 
 // Profile route to demonstrate authentication
 app.get('/profile', (req, res) => {
-  console.log('pajak2:', res.user, res.id, req.user);
   res.json(req.user);
 });
 
