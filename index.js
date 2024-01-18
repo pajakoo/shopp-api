@@ -16,18 +16,12 @@ app.use(
     name: 'session',
     keys: ['cyberwolve'],
     maxAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
-    domain: process.env.CLIENT_UR, // Set the domain of your website
-    secure: true, // Require HTTPS
+
   })
 );
 
 
-app.get('/set-cookie', (req, res) => {
-  res.cookie('firstPartyCookie', 'exampleValue', { domain: process.env.CLIENT_UR, secure: true });
-  res.send('Cookie set as first-party.');
-});
-
-
+ 
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -43,7 +37,7 @@ app.use(
 passport.use(new GoogleStrategy({
   clientID:  process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: 'https://pajakoo-api.onrender.com/auth/google/callback',
+  callbackURL: '/auth/google/callback',
 }, (accessToken, refreshToken, profile, done) => {
   return done(null, profile);
 }));
@@ -71,7 +65,7 @@ app.get(
   '/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
   (req, res) => {
-    console.log('pajak',req.user);
+    console.log('pajak',req.user.id);
     const userData = { id: req.user.id};
     const encodedUserData = encodeURIComponent(JSON.stringify(userData));
 
@@ -84,6 +78,7 @@ app.get(
 
 // Profile route to demonstrate authentication
 app.get('/profile', (req, res) => {
+  console.log('pajak2:', res.user, res.id, req.user);
   res.json(req.user);
 });
 
