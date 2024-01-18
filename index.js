@@ -16,14 +16,14 @@ app.use(
     name: 'session',
     keys: ['cyberwolve'],
     maxAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
-    domain: 'https://pajakoo.onrender.com', // Set the domain of your website
+    domain: process.env.CLIENT_UR, // Set the domain of your website
     secure: true, // Require HTTPS
   })
 );
 
 
 app.get('/set-cookie', (req, res) => {
-  res.cookie('firstPartyCookie', 'exampleValue', { domain: 'yourdomain.com', secure: true });
+  res.cookie('firstPartyCookie', 'exampleValue', { domain: process.env.CLIENT_UR, secure: true });
   res.send('Cookie set as first-party.');
 });
 
@@ -72,7 +72,7 @@ app.get(
   passport.authenticate('google', { failureRedirect: '/' }),
   (req, res) => {
     // Set any necessary cookies, including the first-party cookie
-    res.cookie('firstPartyCookie', 'exampleValue', { domain:"https://pajakoo-api.onrender.com", secure: true, sameSite: 'None' });
+    res.cookie('firstPartyCookie', req.user, { domain: process.env.CLIENT_URL, secure: true, sameSite: 'None' });
     res.redirect(process.env.CLIENT_URL);
   }
 );
