@@ -30,11 +30,11 @@ app.use(
 		credentials: true,
 	})
 );
-
+console.log(`${process.env.CLIENT_URL}/auth/google/callback`);
 passport.use(new GoogleStrategy({
   clientID:  process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: `${process.env.CLIENT_URL}/auth/google/callback`,
+  callbackURL: '/auth/google/callback',
 }, (accessToken, refreshToken, profile, done) => {
   return done(null, profile);
 }));
