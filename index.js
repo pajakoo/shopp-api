@@ -30,11 +30,11 @@ app.use(
 		credentials: true,
 	})
 );
-console.log(`${process.env.CLIENT_URL}/auth/google/callback`);
+
 passport.use(new GoogleStrategy({
   clientID:  process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: '/auth/google/callback',
+  callbackURL: 'https://pajakoo-api.onrender.com/auth/google/callback',
 }, (accessToken, refreshToken, profile, done) => {
   return done(null, profile);
 }));
