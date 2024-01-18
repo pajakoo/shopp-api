@@ -16,7 +16,7 @@ app.use(
     name: 'session',
     keys: ['cyberwolve'],
     maxAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
-    domain: 'https://pajakoo-api.onrender.com', // Set the domain of your website
+    domain: 'https://pajakoo.onrender.com', // Set the domain of your website
     secure: true, // Require HTTPS
   })
 );
